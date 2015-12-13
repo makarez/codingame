@@ -39,7 +39,6 @@ class Map:
 			return True
 			
 	def free(self, x, y):
-		debug(str(self.map[x][y]))
 		if self.valid(x,y) and self.map[x][y] == "x":
 			return True
 		else:
@@ -162,9 +161,13 @@ def eval_dirs(map, me, dirs):
 	current_pos = Position(me.get_pos().x, me.get_pos().y)
 	for dir1 in valid_dirs:
 		me.set_pos(current_pos)
-		eval_dist(map, me, dir1)
-	
+		#eval_dist(map, me, dir1)
+		eval_iso(dir)
+		
 	return max(valid_dirs).label
+
+def eval_iso(dir):
+	dir.score = 0
 
 def eval_dist(map, me, dir):
 	debug(dir) 
@@ -237,5 +240,3 @@ while 1:
 	directions = [up , down, right, left]
 
 	print eval_dirs(map, me, directions)
-
-	
