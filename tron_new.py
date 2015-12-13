@@ -41,7 +41,6 @@ class Map:
 	def free(self, x, y):
 		
 		if self.valid(x,y) and self.map[x][y] == "x":
-			debug(self.map[x][y])
 			return True
 		else:
 			return False
@@ -57,15 +56,26 @@ class Position:
 	def set(self,x,y):
 		self.x = x
 		self.y = y
+		
+	def set_left(self):
+		self.x = self.x-1
+		
+	def set_right(self):
+		self.x = self.x+1
+		
+	def set_up(self):
+		self.y = self.y-1
+		
+	def set_down(self):
+		self.y = self.y+1
 
 class Direction:
 	
 	def __init__(self, label):
 		self.label = label
+		self.score = -1
 	
 	def valid(self, map, pos):
-		debug (self.label)
-		pos.dump()
 		if self.label == "UP":
 			if map.free(pos.x, pos.y-1):
 				return True
@@ -78,7 +88,12 @@ class Direction:
 		elif self.label == "RIGHT":
 			if map.free(pos.x+1, pos.y):
 				return True
-
+				
+	def __lt__(self, other_dir):
+		return self.score < other_dir.score
+	
+	def __str__(self):
+		return self.label
 		
 		
 class Player:
@@ -105,16 +120,49 @@ class Player:
 		return "LEFT"
 	
 
+order = 2
+def eval_dirs(map, me, dirs):
+	debug("Eval dirs")
+	valid_dirs = []
+	for dir in directions:
+		debug(dir)
+		if dir.valid(map, me.get_pos()):
+			valid_dirs.append(dir)
+	
+	for dir in valid_dirs:
+		eval_dir(map, me, dir)
+	
+	return max(valid_dirs).label
+
+def eval_dir(map, me, dir):
+	debug("Eval dir" + str(dir))
+	
+	#First we set the new position depending on the dir
+	if dir.label == "LEFT":
+		me.get_pos().set_left()
+	elif dir.label == "RIGHT":
+		me.get_pos().set_right()
+	elif dir.label == "UP":
+		me.get_pos().set_up()
+	elif dir.label == "DOWN":
+		me.get_pos().set_left()
+		
+	#We are now at the next position, we return the number of possible directions
+	valid_dirs = []
+	for dir1 in directions:
+		debug(dir1)
+		if dir1.valid(map, me.get_pos()):
+			valid_dirs.append(dir1)
+	debug(dir.label)
+	debug(valid_dirs)
+	dir.score=len(valid_dirs)
+	
 #Objects initialisation
 map = Map(30,20)	
 me = Player()
 
-right = Direction("RIGHT")
-left = Direction("LEFT")
-up = Direction("UP")
-down = Direction("DOWN")
 
-directions = [up , down, right, left, ]
+
 
 me.dump_position()
 # game loop
@@ -139,14 +187,19 @@ while 1:
 		if x0 == -1:
 			map.clear_dead_players(i)
         
-		#We keep our positing, might be useful :D
+		#We keep our position, might be useful :D
 		if i==p:
 			me.set_pos(pos)
 			me.dump_position()
-	displayMap(map)
+	#displayMap(map)
 	
-	for dir in directions:
-		if dir.valid(map, me.get_pos()):
-			print dir.label
-			break
+	#Reset the directions
+	right = Direction("RIGHT")
+	left = Direction("LEFT")
+	up = Direction("UP")
+	down = Direction("DOWN")
+	directions = [up , down, right, left]
+
+	print eval_dirs(map, me, directions)
+
 	
