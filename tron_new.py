@@ -39,7 +39,7 @@ class Map:
 			return True
 			
 	def free(self, x, y):
-		
+		debug(str(self.map[x][y]))
 		if self.valid(x,y) and self.map[x][y] == "x":
 			return True
 		else:
@@ -49,9 +49,6 @@ class Position:
 	def __init__(self, x, y):
 		self.x = x
 		self.y = y
-		
-	def dump(self):
-		debug(str(self.x) + "," + str(self.y))
 		
 	def set(self,x,y):
 		self.x = x
@@ -68,6 +65,9 @@ class Position:
 		
 	def set_down(self):
 		self.y = self.y+1
+		
+	def __str__(self):
+		return str(self.x) + "," + str(self.y)
 
 class Direction:
 	
@@ -101,10 +101,10 @@ class Player:
 	def __init__(self):
 		self.pos = Position(0,0)
 		self.id = 0
-		
-		
+			
 	def set_pos(self, pos):
-		self.pos = pos
+		self.pos.x = pos.x
+		self.pos.y = pos.y
 		
 	def get_pos(self):
 		return self.pos
@@ -113,29 +113,67 @@ class Player:
 		self.id = id
 	
 	def dump_position(self):
-		self.pos.dump()
+		debug(self.pos)
 		
 	def get_actions(self):
 		#Here we build the actions we can do depending on the current situation
 		return "LEFT"
 	
-
+def compute_dist(map, me, dir):
+	dist = 0
+	if dir.label == "LEFT":
+		for i in xrange(me.get_pos().x-1, -1, -1):
+			debug(i)
+			if map.free(i, me.get_pos().y):
+				dist +=1
+			else:
+				break
+	elif dir.label == "RIGHT":
+		for i in xrange(me.get_pos().x+1, 30):
+			debug(i)
+			if map.free(i, me.get_pos().y):
+				dist +=1
+			else:
+				break
+	elif dir.label == "UP":
+		for i in xrange(me.get_pos().y-1, -1, -1):
+			debug(i)
+			if map.free(me.get_pos().x, i):
+				dist +=1
+			else:
+				break
+	elif dir.label == "DOWN":
+		for i in xrange(me.get_pos().y+1, 20):
+			debug(i)
+			if map.free(me.get_pos().x, i):
+				dist +=1
+			else:
+				break
+	return dist
+	
+	
 order = 2
 def eval_dirs(map, me, dirs):
 	debug("Eval dirs")
 	valid_dirs = []
-	for dir in directions:
-		debug(dir)
+	for dir in dirs:
 		if dir.valid(map, me.get_pos()):
 			valid_dirs.append(dir)
-	
-	for dir in valid_dirs:
-		eval_dir(map, me, dir)
+	current_pos = Position(me.get_pos().x, me.get_pos().y)
+	for dir1 in valid_dirs:
+		me.set_pos(current_pos)
+		eval_dist(map, me, dir1)
 	
 	return max(valid_dirs).label
 
-def eval_dir(map, me, dir):
-	debug("Eval dir" + str(dir))
+def eval_dist(map, me, dir):
+	debug(dir) 
+	dist = compute_dist(map, me, dir)
+	debug(dist)
+	dir.score = dist
+
+def eval_safe_dir(map, me, dir):
+	debug("Evaluating dir " + str(dir))
 	
 	#First we set the new position depending on the dir
 	if dir.label == "LEFT":
@@ -145,16 +183,14 @@ def eval_dir(map, me, dir):
 	elif dir.label == "UP":
 		me.get_pos().set_up()
 	elif dir.label == "DOWN":
-		me.get_pos().set_left()
-		
+		me.get_pos().set_down()
+
 	#We are now at the next position, we return the number of possible directions
 	valid_dirs = []
 	for dir1 in directions:
-		debug(dir1)
 		if dir1.valid(map, me.get_pos()):
 			valid_dirs.append(dir1)
-	debug(dir.label)
-	debug(valid_dirs)
+
 	dir.score=len(valid_dirs)
 	
 #Objects initialisation
