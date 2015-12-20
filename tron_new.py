@@ -80,6 +80,7 @@ class Direction:
 				return True
 		if self.label == "DOWN":
 			if map.free(pos.x, pos.y+1):
+				debug(map.map[pos.x][pos.y+1]) 
 				return True
 		elif self.label == "LEFT":
 			if map.free(pos.x-1, pos.y):
@@ -87,6 +88,7 @@ class Direction:
 		elif self.label == "RIGHT":
 			if map.free(pos.x+1, pos.y):
 				return True
+		return False
 				
 	def __lt__(self, other_dir):
 		return self.score < other_dir.score
@@ -122,28 +124,24 @@ def compute_dist(map, me, dir):
 	dist = 0
 	if dir.label == "LEFT":
 		for i in xrange(me.get_pos().x-1, -1, -1):
-			debug(i)
 			if map.free(i, me.get_pos().y):
 				dist +=1
 			else:
 				break
 	elif dir.label == "RIGHT":
 		for i in xrange(me.get_pos().x+1, 30):
-			debug(i)
 			if map.free(i, me.get_pos().y):
 				dist +=1
 			else:
 				break
 	elif dir.label == "UP":
 		for i in xrange(me.get_pos().y-1, -1, -1):
-			debug(i)
 			if map.free(me.get_pos().x, i):
 				dist +=1
 			else:
 				break
 	elif dir.label == "DOWN":
 		for i in xrange(me.get_pos().y+1, 20):
-			debug(i)
 			if map.free(me.get_pos().x, i):
 				dist +=1
 			else:
@@ -156,24 +154,31 @@ def eval_dirs(map, me, dirs):
 	debug("Eval dirs")
 	valid_dirs = []
 	for dir in dirs:
+		debug("Validating %s" % dir.label)
 		if dir.valid(map, me.get_pos()):
 			valid_dirs.append(dir)
 	current_pos = Position(me.get_pos().x, me.get_pos().y)
 	for dir1 in valid_dirs:
 		me.set_pos(current_pos)
-		#eval_dist(map, me, dir1)
-		eval_iso(dir)
-		
-	return max(valid_dirs).label
+		eval_dist(map, me, dir1)
+		#eval_iso(dir)
+	
+	# if len(valid_dirs) == 2 and min(valid_dirs).score == 1 and max(valid_dirs).score > 1:
+		# return max(valid_dirs).label
+	if max(valid_dirs).score < 5:
+		return max(valid_dirs).label
+	else:
+		return max(valid_dirs).label
 
 def eval_iso(dir):
 	dir.score = 0
 
 def eval_dist(map, me, dir):
-	debug(dir) 
+	debug(dir)
 	dist = compute_dist(map, me, dir)
 	debug(dist)
 	dir.score = dist
+
 
 def eval_safe_dir(map, me, dir):
 	debug("Evaluating dir " + str(dir))
@@ -193,7 +198,7 @@ def eval_safe_dir(map, me, dir):
 	for dir1 in directions:
 		if dir1.valid(map, me.get_pos()):
 			valid_dirs.append(dir1)
-
+	
 	dir.score=len(valid_dirs)
 	
 #Objects initialisation
@@ -225,12 +230,14 @@ while 1:
 		#If a player has disappeared, we clear the map
 		if x0 == -1:
 			map.clear_dead_players(i)
+		
+
         
 		#We keep our position, might be useful :D
 		if i==p:
 			me.set_pos(pos)
 			me.dump_position()
-	#displayMap(map)
+	# displayMap(map)
 	
 	#Reset the directions
 	right = Direction("RIGHT")
@@ -239,4 +246,5 @@ while 1:
 	down = Direction("DOWN")
 	directions = [up , down, right, left]
 
-	print eval_dirs(map, me, directions)
+	last_dir = eval_dirs(map, me, directions)
+	print last_dir
