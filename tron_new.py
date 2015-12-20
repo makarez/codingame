@@ -165,10 +165,7 @@ def eval_dirs(map, me, dirs):
 	
 	# if len(valid_dirs) == 2 and min(valid_dirs).score == 1 and max(valid_dirs).score > 1:
 		# return max(valid_dirs).label
-	if max(valid_dirs).score < 5:
-		return max(valid_dirs).label
-	else:
-		return max(valid_dirs).label
+	return max(valid_dirs).label
 
 def eval_iso(dir):
 	dir.score = 0
