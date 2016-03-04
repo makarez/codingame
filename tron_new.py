@@ -1,6 +1,7 @@
 import sys
 import math
 import random
+import copy
 
 # Auto-generated code below aims at helping you parse
 # the standard input according to the problem statement.
@@ -156,11 +157,12 @@ def eval_dirs(map, me, dirs):
 	for dir in dirs:
 		debug("Validating %s" % dir.label)
 		if dir.valid(map, me.get_pos()):
-			valid_dirs.append(dir)
+			valid_dirs.append(copy.deepcopy(dir))
 	current_pos = Position(me.get_pos().x, me.get_pos().y)
 	for dir1 in valid_dirs:
 		me.set_pos(current_pos)
-		eval_dist(map, me, dir1)
+		eval_safe_dir(map, me, dir1)
+		#eval_dist(map, me, dir1)
 		#eval_iso(dir)
 	
 	# if len(valid_dirs) == 2 and min(valid_dirs).score == 1 and max(valid_dirs).score > 1:
@@ -191,12 +193,13 @@ def eval_safe_dir(map, me, dir):
 		me.get_pos().set_down()
 
 	#We are now at the next position, we return the number of possible directions
-	valid_dirs = []
+	valid_dirs2 = []
 	for dir1 in directions:
 		if dir1.valid(map, me.get_pos()):
-			valid_dirs.append(dir1)
+			valid_dirs2.append(copy.deepcopy(dir1))
+			eval_dist(map,me,dir1)
 	
-	dir.score=len(valid_dirs)
+	dir.score=max(valid_dirs2)
 	
 #Objects initialisation
 map = Map(30,20)	
